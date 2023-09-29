@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import json
+import os
 
 # Lee el archivo secret.json
 with open('secret.json') as f:
@@ -127,11 +128,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-#variables de entorno
+#Environment variables
+AUTH_USER_MODEL = 'users.User'
 CORS_ALLOW_ALL_ORIGINS = True
