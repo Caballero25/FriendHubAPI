@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, FieldError
 from rest_framework.views import APIView
 from rest_framework.response import Response 
 from rest_framework import authentication, permissions, status
@@ -12,8 +12,9 @@ from .serializers import BasicUserSerializer
     #permission_classes = [permissions.IsAuthenticated]
 
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
-def userCRUD(request, *args, **kwargs):
-    if request.method == 'GET': #Search one User by ID or Email
+def userCRUD(request):
+    #Search one User by ID or Email
+    if request.method == 'GET': 
         user_id = request.data.get('id')
         email = request.data.get('email')
         if not user_id == None:
@@ -31,23 +32,30 @@ def userCRUD(request, *args, **kwargs):
         serializer_class = BasicUserSerializer(user, many=False)
         return Response(serializer_class.data, status=status.HTTP_200_OK)
         
-    
+    #Create user
     elif request.method == 'POST':
-        #data
-        email = request.data.get('email')
-        first_name = request.data.get('first_name')
-        last_name = request.data.get('last_name')
-        password = request.data.get('password')
-        #queryset
-        user = User.objects.filter(email=email).first()
-        if user:
-            return Response({"error":"User already exist"}, status=status.HTTP_409_CONFLICT)
+        serializer_class = BasicUserSerializer(data = request.data, many=False)
+        if serializer_class.is_valid():
+            #data 
+            email = request.data.get('email')
+            first_name = request.data.get('first_name')
+            last_name = request.data.get('last_name')
+            password = request.data.get('password')
+            if email == None or first_name == None or last_name == None or password == None:
+                return Response({"error": {"Data not can be null": {"email": email,
+                                                                    "first_name": first_name,
+                                                                    "last_name": last_name,
+                                                                    "password": password}}}, status=status.HTTP_404_NOT_FOUND)
+            #queryset
+            user = User.objects.filter(email=email).first()
+            if user:
+                return Response({"error":"User already exist"}, status=status.HTTP_409_CONFLICT)
+            else:
+                new_user = User(email=email, first_name=first_name, last_name=last_name)
+                new_user.set_password(password)
+                new_user.save()
+                return Response(serializer_class.data, status=status.HTTP_201_CREATED)
         else:
-            new_user = User.objects.create(email=email, first_name=first_name, last_name=last_name)
-            new_user.set_password(password)
-            new_user.save()
-            #serializer
-            serializer_class = BasicUserSerializer(new_user, many=False)
-            return Response(serializer_class.data, status=status.HTTP_201_CREATED)
+            return Response(serializer_class.errors, status=status.HTTP_404_NOT_FOUND)
 
 
