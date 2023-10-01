@@ -1,9 +1,11 @@
 from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist, FieldError
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.hashers import check_password
 from rest_framework.views import APIView
 from rest_framework.response import Response 
 from rest_framework import authentication, permissions, status
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 from .models import User
 from .serializers import BasicUserSerializer
 
@@ -45,38 +47,54 @@ def userCRUD(request):
                 return Response({"error": {"Data not can be null": {"email": email,
                                                                     "first_name": first_name, #Nonetype data is not admissible
                                                                     "last_name": last_name,
-                                                                    "password": password}}}, status=status.HTTP_404_NOT_FOUND)
+                                                                    "password": password}}}, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
             #queryset
             user = User.objects.filter(email=email).first()
             if user:
-                return Response({"error":"User already exist"}, status=status.HTTP_409_CONFLICT)
+                return Response({"error":"User already exist"}, status=status.HTTP_409_CONFLICT, content_type="application/json")
             else:
                 new_user = User(email=email, first_name=first_name, last_name=last_name)
                 new_user.set_password(password)
                 new_user.save()
-                return Response(serializer_class.data, status=status.HTTP_201_CREATED)
+                return Response(serializer_class.data, status=status.HTTP_201_CREATED, content_type="application/json")
         else:
-            return Response(serializer_class.errors, status=status.HTTP_404_NOT_FOUND)
+            return Response(serializer_class.errors, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
 
-
+    #Edit user
     elif request.method == 'PUT':
         user_id = request.data.get('id')
         if user_id == None or not user_id > 0:
-            return Response({"error": "ID invalid"}, status=status.HTTP_412_PRECONDITION_FAILED)
+            return Response({"error": "ID invalid"}, status=status.HTTP_412_PRECONDITION_FAILED, content_type="application/json")
         try:
             edit_user = User.objects.get(id=user_id)
         except ObjectDoesNotExist:
-            return Response({"error": "Sorry, this User does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        #Existing data from edit_user
-        existing_data = BasicUserSerializer(edit_user, many=False).data
-        # Actualizar solo los campos proporcionados en el request
-        serializer = BasicUserSerializer(edit_user, data=request.data, partial=True)
-        if serializer.is_valid():
-            # Restaurar los campos que no se proporcionaron en el request
-            for key, value in existing_data.items():
-                if key not in request.data:
-                    setattr(edit_user, key, value)
-            serializer.save()  # Guardar los cambios en la base de datos
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"error": "Sorry, this User does not exist"}, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
+        
+        serializer_class = BasicUserSerializer(edit_user, data=request.data, partial=True)
+        
+        if serializer_class.is_valid():
+            serializer_class.save()
+            return Response(serializer_class.data, status=status.HTTP_200_OK, content_type="application/json")
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer_class.errors, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
+        
+    #Delete user
+    elif request.method == "DELETE":
+        user_id = request.data.get('id')
+        user_pw = request.data.get('password')
+        if user_id == None or not user_id > 0:
+            return Response({"error": "ID invalid"}, status=status.HTTP_412_PRECONDITION_FAILED, content_type="application/json")
+        try:
+            edit_user = User.objects.get(id=user_id)
+            token_user = Token.objects.get(user=edit_user)
+        except ObjectDoesNotExist:
+            return Response({"error": "Sorry, this User does not exist"}, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
+        password_matched = check_password(user_pw, edit_user.password)
+        if password_matched: 
+            edit_user.delete()
+            token_user.delete()
+            return Response({"message": "user has been deleted successfully"}, status=status.HTTP_200_OK)
+        else: 
+            return Response({"error": "passwords do not match"}, status=status.HTTP_404_NOT_FOUND, content_type="application/json")
+        
+            
