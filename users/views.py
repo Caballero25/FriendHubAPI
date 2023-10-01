@@ -43,7 +43,7 @@ def userCRUD(request):
             password = request.data.get('password')
             if email == None or first_name == None or last_name == None or password == None:
                 return Response({"error": {"Data not can be null": {"email": email,
-                                                                    "first_name": first_name,
+                                                                    "first_name": first_name, #Nonetype data is not admissible
                                                                     "last_name": last_name,
                                                                     "password": password}}}, status=status.HTTP_404_NOT_FOUND)
             #queryset
@@ -59,3 +59,24 @@ def userCRUD(request):
             return Response(serializer_class.errors, status=status.HTTP_404_NOT_FOUND)
 
 
+    elif request.method == 'PUT':
+        user_id = request.data.get('id')
+        if user_id == None or not user_id > 0:
+            return Response({"error": "ID invalid"}, status=status.HTTP_412_PRECONDITION_FAILED)
+        try:
+            edit_user = User.objects.get(id=user_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Sorry, this User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        #Existing data from edit_user
+        existing_data = BasicUserSerializer(edit_user, many=False).data
+        # Actualizar solo los campos proporcionados en el request
+        serializer = BasicUserSerializer(edit_user, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Restaurar los campos que no se proporcionaron en el request
+            for key, value in existing_data.items():
+                if key not in request.data:
+                    setattr(edit_user, key, value)
+            serializer.save()  # Guardar los cambios en la base de datos
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

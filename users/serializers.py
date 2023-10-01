@@ -15,12 +15,12 @@ class BasicUserSerializer(serializers.ModelSerializer):
             try:
                 django_validate_email(value)
             except:
-                raise serializers.ValidationError("hola")
+                raise serializers.ValidationError("Email is not valid")
             return value
         
     def get_friends(self, obj):
         try:
-            list_friends = [{'id': friend.id, 'first_name': friend.first_name, 'last_name': friend.last_name} for friend in obj.friends.all()]
-            return list_friends
+            friends_list = [{'id': friend.id, 'first_name': friend.first_name, 'last_name': friend.last_name} for friend in obj.friends.all()]
+            return friends_list
         except:
             return []
