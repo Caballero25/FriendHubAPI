@@ -18,7 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=50, blank=True, null=True)
     create_at = models.DateTimeField(auto_now_add=True)
-
+    
     #social data
     friends = models.ManyToManyField('self', blank=True)
     #permissions and groups
@@ -44,7 +44,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         mutual_friends = list(mutual_friends)
 
         return len(mutual_friends), mutual_friends
-    
+
 #Auth Token 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
