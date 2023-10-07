@@ -13,10 +13,17 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import json
 import os
+import firebase_admin
 
-# Lee el archivo secret.json
+# Read secret.json
 with open('secret.json') as f:
     secret_data = json.load(f)
+
+#Fire Base Config
+cred = firebase_admin.credentials.Certificate("./friendshub-firebase.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': secret_data['secret_firebase_url']
+})
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
