@@ -1,8 +1,21 @@
 from django.core.validators import validate_email as django_validate_email
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, pagination
+from google.api_core.exceptions import NotFound, Forbidden
 from .models import User
+from google.cloud import storage
 import re
+import json
+
+
+# Read secret.json
+with open('secret.json') as f:
+    secret_data = json.load(f)
+
+#Images storage
+client = storage.Client.from_service_account_json('./friendshub-firebase.json')
+bucket = client.get_bucket(secret_data['bucket'])
+
 
 
 class BasicUserSerializer(serializers.ModelSerializer):
@@ -26,7 +39,7 @@ class BasicUserSerializer(serializers.ModelSerializer):
         except:
             return []
 
-class PostUser(serializers.Serializer):
+class CreateUserSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -52,13 +65,74 @@ class PostUser(serializers.Serializer):
 
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UpdateUserSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False)
+    banner = serializers.ImageField(required=False)
     
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name', 'email', 'avatar',
                   'banner', 'biography', 'birthdate', 'location') 
-        
+    
+    def validated_avatar(self, value):
+        return value
+    def validated_banner(self, value):
+        return value
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Obtener la URL de la imagen desde el campo avatar y agregarla a la representación
+        if instance.avatar or instance.banner:
+            representation['avatar'] = instance.avatar
+            representation['banner'] = instance.banner
+        return representation
+
+    def update(self, instance, validated_data):
+        avatar_file = validated_data.get('avatar')  # Obtén el archivo de imagen del validated_data
+        banner_file = validated_data.get('banner')  # Obtén el archivo de imagen del validated_data
+        if avatar_file:
+            print(2)
+            # Nombre del archivo en Firebase Storage
+            filename = 'avatars/{}/{}'.format(instance.email, avatar_file.name)
+            
+            # Subir la imagen a Firebase Storage
+            blob = bucket.blob(filename)
+            blob.upload_from_file(avatar_file, content_type=avatar_file.content_type)
+            blob.make_public()
+
+            # Obtener la URL de la imagen subida
+            image_url = blob.public_url
+
+            # Asignar la URL de la imagen a user_avatar
+            instance.avatar = image_url
+            instance.save()  # Guardar la instancia actualizada
+        elif banner_file:
+            print(2)
+            # Nombre del archivo en Firebase Storage
+            filename = 'banners/{}/{}'.format(instance.email, banner_file.name)
+            
+            # Subir la imagen a Firebase Storage
+            blob = bucket.blob(filename)
+            blob.upload_from_file(banner_file, content_type=banner_file.content_type)
+            blob.make_public()
+
+            # Obtener la URL de la imagen subida
+            image_url = blob.public_url
+
+            # Asignar la URL de la imagen a user_avatar
+            instance.banner = image_url
+            instance.save()  # Guardar la instancia actualizada
+            
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.biography = validated_data.get('biography', instance.biography)
+        instance.birthdate = validated_data.get('birthdate', instance.birthdate)
+        instance.location = validated_data.get('location', instance.location)
+
+        instance.save()  # Guardar la instancia actualizada
+        return instance
+
 
 class DeleteUserSerializer(serializers.Serializer):
     password1 = serializers.CharField(required=True, write_only=True)

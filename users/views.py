@@ -2,17 +2,13 @@ from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.views import APIView
-from rest_framework import filters, viewsets
 from rest_framework.response import Response 
 from rest_framework import authentication, permissions, status
 from rest_framework.decorators import api_view
-from rest_framework.authtoken.models import Token
 from .models import User
-from .serializers import BasicUserSerializer, PostUser, UserUpdateSerializer, DeleteUserSerializer, CustomAuthTokenSerializer
+from . import serializers 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveAPIView,
@@ -52,12 +48,12 @@ def userCRUD(request):
         except ObjectDoesNotExist:
             return Response({"error": "Sorry, this User does not exist"}, status=status.HTTP_404_NOT_FOUND)
         #serializer
-        serializer_class = BasicUserSerializer(user, many=False)
+        serializer_class = serializers.BasicUserSerializer(user, many=False)
         return Response(serializer_class.data, status=status.HTTP_200_OK)
         
 
 class CreateUserView(CreateAPIView):
-    serializer_class = PostUser
+    serializer_class = serializers.CreateUserSerializer
     queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
@@ -67,19 +63,19 @@ class CreateUserView(CreateAPIView):
         user = serializer.save()
 
         return Response({
-            "user": BasicUserSerializer(user, context=self.get_serializer_context()).data,
+            "user": serializers.BasicUserSerializer(user, context=self.get_serializer_context()).data,
             "message": "User registered successfully!"
         })
 
 
-class EditUserView(RetrieveUpdateAPIView):
-    serializer_class = UserUpdateSerializer
+class UpdateUserView(RetrieveUpdateAPIView):
+    serializer_class = serializers.UpdateUserSerializer
     def get_queryset(self):
         return User.objects.all()
-
+    
 
 class DeleteUserView(RetrieveDestroyAPIView):
-    serializer_class = DeleteUserSerializer
+    serializer_class = serializers.DeleteUserSerializer
     queryset = User.objects.all()
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -93,14 +89,5 @@ class DeleteUserView(RetrieveDestroyAPIView):
     
     
 class CustomObtainAuthToken(ObtainAuthToken):
-    serializer_class = CustomAuthTokenSerializer
+    serializer_class = serializers.CustomAuthTokenSerializer
     
-#Serch users
-"""
-class SearchUsers(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = BasicUserSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['last_name','email']
-"""
-
