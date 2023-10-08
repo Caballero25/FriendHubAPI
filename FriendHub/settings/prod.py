@@ -11,7 +11,7 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 DATABASES = {
-    'default': dj_database_url.parse(secret_data['DB_URL'])
+    'default': dj_database_url.parse(os.environ.get("DB_URL"))
 }
 
 CORS_ALLOWED_ORIGINS = [

@@ -1,22 +1,17 @@
 from django.core.validators import validate_email as django_validate_email
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, pagination
-from google.api_core.exceptions import NotFound, Forbidden
 from .models import User
 from google.cloud import storage
-import re
-import json
+import friendshub_firebase
+import os
+from dotenv import load_dotenv
 
-
-# Read secret.json
-with open('secret.json') as f:
-    secret_data = json.load(f)
 
 #Images storage
-client = storage.Client.from_service_account_json('./friendshub-firebase.json')
-bucket = client.get_bucket(secret_data['bucket'])
-
-
+load_dotenv()
+client = storage.Client.from_service_account_info(friendshub_firebase.obtain_credentials())
+bucket = client.get_bucket(os.environ.get("BUCKET"))
 
 class BasicUserSerializer(serializers.ModelSerializer):
     friends = serializers.SerializerMethodField(read_only=True)

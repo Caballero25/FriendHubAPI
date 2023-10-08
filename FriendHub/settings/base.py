@@ -1,22 +1,15 @@
 from pathlib import Path
 import json
 import os
-import firebase_admin
+from dotenv import load_dotenv
 
-# Read secret.json
-with open('secret.json') as f:
-    secret_data = json.load(f)
-
-#Fire Base Config
-cred = firebase_admin.credentials.Certificate("./friendshub-firebase.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': secret_data['secret_firebase_url']
-})
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = secret_data['Secret Key']
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # Application definition
 INSTALLED_APPS = [
