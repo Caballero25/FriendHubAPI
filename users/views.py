@@ -90,4 +90,3 @@ class DeleteUserView(RetrieveDestroyAPIView):
     
 class CustomObtainAuthToken(ObtainAuthToken):
     serializer_class = serializers.CustomAuthTokenSerializer
-    

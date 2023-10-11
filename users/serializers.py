@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers, pagination
 from .models import User
 from google.cloud import storage
-import friendshub_firebase
+from . import friendshub_firebase
 import os
 from dotenv import load_dotenv
 
