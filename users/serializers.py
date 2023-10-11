@@ -3,14 +3,14 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import User
 from google.cloud import storage
-from . import friendshub_firebase 
+#from . import friendshub_firebase 
 import os
 from dotenv import load_dotenv
 
 
 #Images storage
 load_dotenv()
-client = storage.Client.from_service_account_info(friendshub_firebase.obtain_credentials())
+client = storage.Client.from_service_account_json("friendshub-8a039-firebase-adminsdk-amwfa-bf38ccca17.json")
 bucket = client.get_bucket(os.environ.get("BUCKET"))
 
 class BasicUserSerializer(serializers.ModelSerializer):
