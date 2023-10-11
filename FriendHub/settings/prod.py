@@ -16,7 +16,7 @@ DATABASES = {
 
 CORS_ALLOWED_ORIGINS = [
         "https://*",
-        "localhost",
+        "http://localhost",
 ]
 
 STATIC_URL = 'static/'
