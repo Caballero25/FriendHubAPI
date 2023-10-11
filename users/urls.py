@@ -1,14 +1,14 @@
 from django.urls import path 
 from rest_framework.authtoken.views import obtain_auth_token
-from views import *
+from . import views
 
 urlpatterns = [
     #SearchOneUser
-    path('', userCRUD, name='search-user'),
+    path('', views.userCRUD, name='search-user'),
     #CrudUser
-    path('create/', CreateUserView.as_view(), name='create-user'),
-    path('update/<pk>/', UpdateUserView.as_view(), name='edit-user'),
-    path('delete/<pk>/', DeleteUserView.as_view(), name='delete-user'),
+    path('create/', views.CreateUserView.as_view(), name='create-user'),
+    path('update/<pk>/', views.UpdateUserView.as_view(), name='edit-user'),
+    path('delete/<pk>/', views.DeleteUserView.as_view(), name='delete-user'),
     #auth token
-    path('get-token/', CustomObtainAuthToken.as_view(), name='token_obtain_pair'),
+    path('get-token/', views.CustomObtainAuthToken.as_view(), name='token_obtain_pair'),
 ]
