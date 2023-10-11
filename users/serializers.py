@@ -1,9 +1,9 @@
 from django.core.validators import validate_email as django_validate_email
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from FriendHub.users.models import User
+from FriendHubAPI.users.models import User
 from google.cloud import storage
-from FriendHub.users import friendshub_firebase
+from FriendHubAPI.users import friendshub_firebase
 import os
 from dotenv import load_dotenv
 
