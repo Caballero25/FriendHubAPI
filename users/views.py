@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response 
 from rest_framework import authentication, permissions, status
 from rest_framework.decorators import api_view
@@ -89,4 +90,14 @@ class DeleteUserView(RetrieveDestroyAPIView):
     
     
 class CustomObtainAuthToken(ObtainAuthToken):
-    serializer_class = serializers.CustomAuthTokenSerializer
+    def post(self, request, *args, **kwargs):
+        token_serializer = serializers.CustomAuthTokenSerializer(data=request.data)
+        if token_serializer.is_valid():
+            email = token_serializer.validated_data.get('email')
+            user = User.objects.get(email=email)
+            user_serializer = serializers.BasicUserSerializer(user)
+            token = Token.objects.get(user=user)
+            token_serializer = serializers.TokenSerializer(token, many=False)
+            return Response({'user': user_serializer.data, 'token': token_serializer.data['key']})
+        else:
+            return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

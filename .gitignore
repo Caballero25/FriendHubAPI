@@ -7,3 +7,4 @@ users/migrations/
 media
 .env
 friendshub-8a039-firebase-adminsdk-amwfa-bf38ccca17.json
+FriendHub/settings/prod.py

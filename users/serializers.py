@@ -2,6 +2,7 @@ from django.core.validators import validate_email as django_validate_email
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import User
+from rest_framework.authtoken.models import Token
 from google.cloud import storage
 #from . import friendshub_firebase 
 import os
@@ -173,3 +174,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
     
+class TokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Token 
+        fields = '__all__'

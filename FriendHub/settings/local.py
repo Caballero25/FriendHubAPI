@@ -1,4 +1,6 @@
 from .base import *
+import dj_database_url
+import os
 
 DEBUG = True
 
@@ -14,6 +16,7 @@ DATABASES = {
         'PORT': '5432'
     }
 }
+
 
 
 STATIC_URL = 'static/'
