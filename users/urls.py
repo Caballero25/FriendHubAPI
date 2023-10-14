@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     #SearchOneUser
-    path('', views.userCRUD, name='search-user'),
+    path('search/', views.userCRUD, name='search-user'),
     #CrudUser
     path('create/', views.CreateUserView.as_view(), name='create-user'),
     path('update/<pk>/', views.UpdateUserView.as_view(), name='edit-user'),
