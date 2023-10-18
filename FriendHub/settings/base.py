@@ -21,8 +21,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'users.apps.UsersConfig',
     'drf_yasg',
+    'users.apps.UsersConfig',
+    'publications.apps.PublicationsConfig',
 ]
 
 
